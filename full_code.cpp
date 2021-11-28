@@ -119,17 +119,17 @@ public:
         }
     }
 
-    void buildCircle() {
+    /*void buildCircle() {
 
-    }
+    }*/
 
-    const std::vector<Point>& getAllPoints() const {
+    std::vector<Point>& getAllPoints() {
         return circle;
     }
 
-    bool isCrossedBy(const Rectangle& rectangle) const {
+    bool isCrossedBy(const Rectangle& rectangle)  {
         for (const Point& recPoint : rectangle.getAllPoints()) {
-            for (const Point& cirPoint : getAllPoints()) {
+            for (Point& cirPoint : getAllPoints()) {
                 if (recPoint == cirPoint) {
                     return true;
                 }
@@ -156,7 +156,14 @@ public:
     void setPosition(int tmpTime, int lastPressTime) {
         /// y_tmp += deltaV * (tmpTime - las..) - 10 * (tmpTime - las..) ^ 2 / 2;
         centrePosition.setY(lastPressPosition.getY() + deltaV * (tmpTime - lastPressTime) - 4.9 * pow(tmpTime - lastPressTime, 2));
-        body.buildCircle();
+        /*body.buildCircle();*/
+    }
+
+    void changePosition(int tmpTime, int lastPressTime) {
+        setPosition(tmpTime, lastPressTime);
+        for (auto& point : body.getAllPoints()) {
+
+        }
     }
 
     void setLastPressPosition() {
@@ -181,6 +188,10 @@ public:
         }
     }
 
+    const std::vector<Point>& getAllPoints() {
+        return pipeBody.getAllPoints();
+    }
+
     ~Pipe() = default;
 
 };
@@ -201,6 +212,16 @@ public:
         while (!bird.isCrossedPipe(pipes)) {
             time += ::timeBetFrames;
             bird.setPosition(time, lastPressTime);
+            ++time;     //todo abstract time increment
+            bird.getAllPoints();
+            for (const auto& pipePair : pipes) {
+                pipePair.first.getAllPoints();
+                pipePair.second.getAllPoints();
+            }
+            if (time % timeBetweenPipes == 0) {
+                pipes.push_back(generatePipesPair());
+
+            }
 
         }
         //todo
@@ -211,7 +232,7 @@ public:
         //todo
     }
 
-    void generate() {
+    std::pair<Pipe, Pipe> generatePipesPair() {
         //todo
     }
 
@@ -219,4 +240,5 @@ public:
 
 
 };
-// todo
+
+
