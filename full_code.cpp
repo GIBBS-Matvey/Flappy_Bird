@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <random>
 
 const double Pi = 3.141596;
 
@@ -31,7 +32,12 @@ int timeBetFrames;
 int maxPipesNumber;
 //todo (for Game) initialized
 
+double pipeLen;
+//todo (for Pipe) initialized
 
+
+
+class Pipe;
 
 class Point {
 private:
@@ -86,10 +92,15 @@ public:
         buildRectangle();
     }
 
+    void setUpLeftVertex(int newX) {
+        upLeftVertex.setX(newX);
+    }
+
     void buildRectangle() {
+
         for (int i = 0; i < strLen; ++i) {
             for (int j = 0; j < rowLen; ++j) {
-                rectangle[i + j] = upLeftVertex + std::pair<int, int>(i, j);
+                rectangle[i + j] = upLeftVertex + std::pair<int, int>(i, j);    /// rectangle обновляется (перезапись) todo
             }
         }
     }
@@ -97,6 +108,7 @@ public:
     const std::vector<Point>& getAllPoints() const {
         return rectangle;
     }
+
 
     ~Rectangle() = default;
 };
@@ -119,17 +131,27 @@ public:
         }
     }
 
-    /*void buildCircle() {
+    void buildCircle(const Point& newCentre) {
+        centre = newCentre;
+        Rectangle square(Point(centre.getX() - rad, centre.getY() + rad), 2 * rad, 2 * rad);
+        std::vector<Point> newCircle;
+        newCircle.reserve(size_t(Pi * rad * rad) / pointSize * pointSize);
+        for (const Point& point : square.getAllPoints()) {
+            if (point.getX() * point.getX() + point.getY() * point.getY() <= rad * rad) {
+                newCircle.push_back(point);
+            }
+        }
 
-    }*/
+        circle = std::move(newCircle);
+    }
 
-    std::vector<Point>& getAllPoints() {
+    const std::vector<Point>& getAllPoints() const {
         return circle;
     }
 
-    bool isCrossedBy(const Rectangle& rectangle)  {
-        for (const Point& recPoint : rectangle.getAllPoints()) {
-            for (Point& cirPoint : getAllPoints()) {
+    bool isCrossedBySomething(const std::vector<Point>& points) const {
+        for (const Point& recPoint : points) {
+            for (const Point& cirPoint : circle) {
                 if (recPoint == cirPoint) {
                     return true;
                 }
@@ -139,6 +161,27 @@ public:
     }
 
     ~Circle() = default;
+
+};
+
+class Pipe {
+    Rectangle pipeBody;
+    int birthTime;
+    size_t pipeVel;
+public:
+    Pipe(const Point& upLeftPoint, double h, int birthTime) : pipeVel(pipeVelocity),
+    pipeBody(upLeftPoint, pipeLen, h), birthTime(birthTime) {}
+
+    void setPosition(int tmpTime) {
+        pipeBody.setUpLeftVertex(lenScreen - pipeVel * (tmpTime - birthTime));
+        pipeBody.buildRectangle();
+    }
+
+    const std::vector<Point>& getAllPoints() const {
+        return pipeBody.getAllPoints();
+    }
+
+    ~Pipe() = default;
 
 };
 
@@ -156,14 +199,29 @@ public:
     void setPosition(int tmpTime, int lastPressTime) {
         /// y_tmp += deltaV * (tmpTime - las..) - 10 * (tmpTime - las..) ^ 2 / 2;
         centrePosition.setY(lastPressPosition.getY() + deltaV * (tmpTime - lastPressTime) - 4.9 * pow(tmpTime - lastPressTime, 2));
-        /*body.buildCircle();*/
+        body.buildCircle(centrePosition);
     }
 
-    void changePosition(int tmpTime, int lastPressTime) {
-        setPosition(tmpTime, lastPressTime);
-        for (auto& point : body.getAllPoints()) {
+    const std::vector<Point>& getAllPoints() {
+        return body.getAllPoints();
+    }
 
+    Point getCentrePosition() const {
+        return centrePosition;
+    }
+
+    bool isCrossedByPipe(const Pipe& pipe) const {
+        return body.isCrossedBySomething(pipe.getAllPoints());
+    }
+
+    bool isCrossedVectorPipes(const std::vector<std::pair<Pipe, Pipe>>& pipes) const {
+        for (const auto& pipePair : pipes) {
+            if (body.isCrossedBySomething(pipePair.first.getAllPoints()) ||
+            body.isCrossedBySomething(pipePair.second.getAllPoints())) {
+                return true;
+            }
         }
+        return false;
     }
 
     void setLastPressPosition() {
@@ -173,28 +231,6 @@ public:
     ~Bird() = default;
 };
 
-class Pipe {
-    Rectangle pipeBody;
-    int birthTime;
-    size_t vel;
-public:
-    Pipe(const Point& upLeftPoint, double l, double h, int birthTime) : vel(pipeVelocity),
-    pipeBody(upLeftPoint, l, h), birthTime(birthTime) {}
-
-    void setX(int tmpTime) {
-        for (auto& point : pipeBody.getAllPoints()) {
-            /*point.setX();*/
-            // todo (depending from getX())
-        }
-    }
-
-    const std::vector<Point>& getAllPoints() {
-        return pipeBody.getAllPoints();
-    }
-
-    ~Pipe() = default;
-
-};
 
 class Game {
     int time;
@@ -209,22 +245,21 @@ public:
         std::vector<std::pair<Pipe, Pipe>> pipes;
         pipes.reserve(maxPipesNumber);
 
-        while (!bird.isCrossedPipe(pipes)) {
-            time += ::timeBetFrames;
+        while (!bird.isCrossedVectorPipes(pipes)) {
+            time += ::timeBetFrames;    //todo abstract time increment
+
+            // todo if (clicked) -> bird.setLastPressPosition(bird.getCentrePosition);
+
             bird.setPosition(time, lastPressTime);
-            ++time;     //todo abstract time increment
-            bird.getAllPoints();
-            for (const auto& pipePair : pipes) {
-                pipePair.first.getAllPoints();
-                pipePair.second.getAllPoints();
+            for (auto& pipePair : pipes) {
+                pipePair.first.setPosition(time);
+                pipePair.second.setPosition(time);
             }
+
             if (time % timeBetweenPipes == 0) {
                 pipes.push_back(generatePipesPair());
-
             }
-
         }
-        //todo
     }
 
     void clicked() {
@@ -232,13 +267,23 @@ public:
         //todo
     }
 
-    std::pair<Pipe, Pipe> generatePipesPair() {
-        //todo
+    /// Pipe(const Point& upLeftPoint, double h, int birthTime)
+    std::pair<Pipe, Pipe> generatePipesPair() const {
+        double upPipeH;
+        double downPipeH;
+
+        do {
+            upPipeH = std::rand() * hScreen;
+            downPipeH = std::rand() * hScreen;
+        } while (upPipeH + downPipeH >= hScreen - 3 * birdRad);
+
+        Point upPipeUpLeftVertex(lenScreen, hScreen);
+        Point downPipeUpLeftVertex(lenScreen, downPipeH);
+
+        std::pair<Pipe, Pipe> pipePair({upPipeUpLeftVertex, upPipeH, time}, {downPipeUpLeftVertex, downPipeH, time});
+
+        return pipePair;
     }
 
-
-
-
 };
-
 
