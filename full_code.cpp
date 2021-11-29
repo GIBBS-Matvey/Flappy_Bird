@@ -102,7 +102,7 @@ public:
 
         for (int i = 0; i < strLen; ++i) {
             for (int j = 0; j < rowLen; ++j) {
-                rectangle[i + j] = upLeftVertex + std::pair<int, int>(i, j);    /// rectangle обновляется (перезапись) todo
+                rectangle[i * rowLen + j] = upLeftVertex + std::pair<int, int>(i, j);    /// rectangle обновляется (перезапись) todo
             }
         }
     }
@@ -290,5 +290,7 @@ public:
 };
 
 int main() {
+
     return 0;
 }
+
