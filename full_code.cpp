@@ -5,34 +5,34 @@
 
 const double Pi = 3.141596;
 
-size_t pointSize;
+size_t pointSize = 1;
 // todo initialized
 
-size_t lenScreen;
+size_t lenScreen = 100;
 //todo initialized
 
-size_t hScreen;
+size_t hScreen = 70;
 //todo initialized
 
-size_t deltaVelocityForBird;
+size_t deltaVelocityForBird = 2;
 //todo (for bird) initialized
 
-size_t pipeVelocity;
+size_t pipeVelocity = 2;
 //todo (for pipe) initialized
 
-int timeBetweenPipes;
+int timeBetweenPipes = 4;
 //todo (for pipe) initialized
 
-double birdRad;
+double birdRad = 8;
 //todo (for bird) initialized
 
-int timeBetFrames;
+int timeBetFrames = 3;
 //todo (for Game) initialized
 
-int maxPipesNumber;
+int maxPipesNumber = 10;
 //todo (for Game) initialized
 
-double pipeLen;
+double pipeLen = 3;
 //todo (for Pipe) initialized
 
 
@@ -44,6 +44,8 @@ private:
     double x;
     double y;
 public:
+    Point() = default;
+
     Point(double x, double y) : x(x), y(y) {}
 
     double getX() const {
@@ -287,3 +289,6 @@ public:
 
 };
 
+int main() {
+    return 0;
+}
