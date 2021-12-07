@@ -275,8 +275,8 @@ public:
         double downPipeH;
 
         do {
-            upPipeH = std::rand() * hScreen;
-            downPipeH = std::rand() * hScreen;
+            upPipeH = std::rand() % hScreen;
+            downPipeH = std::rand() % hScreen;
         } while (upPipeH + downPipeH >= hScreen - 3 * birdRad);
 
         Point upPipeUpLeftVertex(lenScreen, hScreen);
@@ -293,4 +293,3 @@ int main() {
 
     return 0;
 }
-
